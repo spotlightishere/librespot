@@ -396,7 +396,10 @@ impl SpClient {
         headers: Option<HeaderMap>,
         message: &M,
     ) -> SpClientResult {
-        let body = protobuf::text_format::print_to_string(message);
+        let pretty_body = protobuf::text_format::print_to_string(message);
+        println!("about to post {pretty_body}");
+
+        let raw_body = message.write_to_bytes()?;
 
         let mut headers = headers.unwrap_or_default();
         headers.insert(
@@ -404,7 +407,7 @@ impl SpClient {
             HeaderValue::from_static("application/x-protobuf"),
         );
 
-        self.request(method, endpoint, Some(headers), Some(&body))
+        self.request_bytes(method, endpoint, Some(headers), Some(raw_body))
             .await
     }
 
@@ -427,6 +430,17 @@ impl SpClient {
         endpoint: &str,
         headers: Option<HeaderMap>,
         body: Option<&str>,
+    ) -> SpClientResult {
+        let raw_body = body.unwrap_or_default().as_bytes().to_vec();
+        return self.request_bytes(method, endpoint, headers, Some(raw_body)).await;
+    }
+
+    pub async fn request_bytes(
+        &self,
+        method: &Method,
+        endpoint: &str,
+        headers: Option<HeaderMap>,
+        body: Option<Vec<u8>>,
     ) -> SpClientResult {
         let mut tries: usize = 0;
         let mut last_response;
@@ -492,6 +506,8 @@ impl SpClient {
                     warn!("Unable to get client token: {e} Trying to continue without...")
                 }
             }
+
+            println!("huh... {:?}", headers_mut);
 
             last_response = self.session().http_client().request_body(request).await;
 

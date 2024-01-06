@@ -10,6 +10,7 @@ use governor::{
     clock::MonotonicClock, middleware::NoOpMiddleware, state::InMemoryState, Quota, RateLimiter,
 };
 use http::{header::HeaderValue, Uri};
+use httparse::Status;
 use hyper::{
     client::{HttpConnector, ResponseFuture},
     header::USER_AGENT,
@@ -207,7 +208,25 @@ impl HttpClient {
                     }
                 }
 
-                if code != StatusCode::OK {
+                if code == StatusCode::SEE_OTHER {
+                    // When we're given 303 See Other, we're given the redirect URL in
+                    // the `Location` header. Let's read that and dispatch another request.
+                    let Some(seen_url) = response.headers().get(hyper::header::LOCATION) else {
+                        // Hmm... we should have this. Something else has gone wrong.
+                        // For a lack of better error handling, we'll go ahead and forward this on.
+                        return Err(HttpClientError::StatusCode(code).into());
+                    };
+                    let follow_through_request = Request::builder()
+                        .method(&hyper::Method::GET)
+                        // Ideally we would not unwrap here, but this function is becoming unwieldy.
+                        .uri(seen_url.to_str().unwrap())
+                        .body(Body::empty())?;
+                    let follow_up_execution = self.request_fut(follow_through_request)?;
+                    return match follow_up_execution.await {
+                        Ok(b) => Ok(b),
+                        Err(e) => Err(e.into()),
+                    }
+                } else if code != StatusCode::OK || code != StatusCode::SEE_OTHER {
                     return Err(HttpClientError::StatusCode(code).into());
                 }
             }

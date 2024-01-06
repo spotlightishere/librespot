@@ -39,6 +39,9 @@ fn compile() {
         proto_dir.join("mercury.proto"),
         proto_dir.join("pubsub.proto"),
         proto_dir.join("spirc.proto"),
+        // Necessary for TTS
+        proto_dir.join("tts-resolve.proto"),
+        proto_dir.join("client-tts.proto"),
     ];
 
     let slices = files.iter().map(Deref::deref).collect::<Vec<_>>();

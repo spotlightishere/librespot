@@ -38,6 +38,8 @@ message ResolveRequest {
         READSPEAKER = 2;
         POLLY = 3;
         WELL_SAID = 4;
+        SONANTIC_DEPRECATED = 5;
+        SONANTIC = 6;
     }
     
     int32 sample_rate_hz = 7;
