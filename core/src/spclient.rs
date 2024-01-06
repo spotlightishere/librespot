@@ -1,6 +1,5 @@
 use std::{
-    fmt::Write,
-    time::{Duration, Instant},
+    fmt::Write, time::{Duration, Instant}
 };
 
 use crate::config::{os_version, OS};
@@ -502,6 +501,8 @@ impl SpClient {
                     warn!("Unable to get client token: {e} Trying to continue without...")
                 }
             }
+
+            println!("huh... {:?}", headers_mut);
 
             last_response = self.session().http_client().request_body(request).await;
 
