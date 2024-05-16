@@ -40,3 +40,5 @@ pub use error::Error;
 pub use file_id::FileId;
 pub use session::Session;
 pub use spotify_id::SpotifyId;
+// Allow for external clients to use our vendored copy of http
+pub use http;

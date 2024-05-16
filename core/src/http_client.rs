@@ -10,7 +10,6 @@ use governor::{
     clock::MonotonicClock, middleware::NoOpMiddleware, state::InMemoryState, Quota, RateLimiter,
 };
 use http::{header::HeaderValue, Uri};
-use httparse::Status;
 use hyper::{
     client::{HttpConnector, ResponseFuture},
     header::USER_AGENT,
